@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@config-plugins/react-native-ble-plx": "^6.0.0",
+    "@shopify/react-native-skia": "0.1.172",
     "expo": "~48.0.10",
     "expo-device": "~5.2.1",
     "expo-splash-screen": "~0.18.1",
@@ -17,10 +18,11 @@
     "react-native": "0.71.6",
     "react-native-base64": "^0.2.1",
     "react-native-ble-plx": "^2.0.3",
+    "react-native-bluetooth-classic": "^1.60.0-rc.26",
     "react-native-device-info": "^10.6.0",
     "react-native-permissions": "^3.8.0",
     "react-native-quick-base64": "^2.0.5",
-    "@shopify/react-native-skia": "0.1.172"
+    "with-rn-bluetooth-classic": "^1.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

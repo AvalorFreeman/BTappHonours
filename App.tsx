@@ -15,6 +15,7 @@ const bleManaging = new BleManager();
 
 const App = () => {
   const {
+    justReceive,
     requestPermissions,
     scanForPeripherals,
     allDevices,
@@ -24,6 +25,7 @@ const App = () => {
     sendMessage,
   } = useBLE();
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [scanning, setScanning] = useState<boolean>(false);
   const [enableBt, updateBt] = useState<boolean>(false);
 
   const scanForDevices = async () => {
@@ -50,6 +52,14 @@ const App = () => {
     setIsModalVisible(true);
   };
 
+  const receiveConnections = async () => {
+    const isPermissionsEnabled = await requestPermissions();
+    if (isPermissionsEnabled) {
+      console.log("Permissions enabled");
+    }
+    setScanning(true);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.TitleWrapper}>
@@ -68,17 +78,35 @@ const App = () => {
             </Pressable>
           </>
         ) : (
-          <Text style={styles.TitleText}>Please Connect to a Device</Text>
+          <>
+            <Text style={styles.TitleText}>Using standard bluetooth v4</Text>
+            {scanning ? (
+              <Text style={styles.TitleText}>Scanning for devices</Text>
+            ) : (
+              <Text style={styles.TitleText}>Please Connect to a Device</Text>
+            )}
+          </>
         )}
       </View>
-      <TouchableOpacity
-        onPress={connectedDevice ? disconnectFromDevice : openModal}
-        style={styles.ctaButton}
-      >
-        <Text style={styles.ctaButtonText}>
-          {connectedDevice ? "Disconnect" : "Connect"}
-        </Text>
-      </TouchableOpacity>
+      {!scanning && (
+        <>
+          <TouchableOpacity
+            onPress={receiveConnections}
+            style={styles.ctaButton}
+          >
+            <Text style={styles.ctaButtonText}>Receive connections</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={connectedDevice ? disconnectFromDevice : openModal}
+            style={styles.ctaButton}
+          >
+            <Text style={styles.ctaButtonText}>
+              {connectedDevice ? "Disconnect" : "Connect"}
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
+
       <DeviceModal
         closeModal={hideModal}
         visible={isModalVisible}

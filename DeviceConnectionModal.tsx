@@ -90,7 +90,6 @@ const modalStyle = StyleSheet.create({
     backgroundColor: "#f2f2f2",
   },
   modalFlatlistContiner: {
-    flex: 1,
     justifyContent: "center",
   },
   modalCellOutline: {

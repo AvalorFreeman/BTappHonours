@@ -1,12 +1,25 @@
 /* eslint-disable no-bitwise */
 import { useMemo, useState } from "react";
-import { PermissionsAndroid, Platform } from "react-native";
+import {
+  NativeAppEventEmitter,
+  NativeModules,
+  PermissionsAndroid,
+  Platform,
+} from "react-native";
 import {
   BleError,
   BleManager,
   Characteristic,
   Device,
 } from "react-native-ble-plx";
+
+import RNBluetoothClassic, {
+  BluetoothEvent,
+  BluetoothEventType,
+  BluetoothDevice,
+} from "react-native-bluetooth-classic";
+
+import ConnectionAcceptor from "react-native-bluetooth-classic";
 
 import * as ExpoDevice from "expo-device";
 
@@ -16,18 +29,21 @@ const DEVICE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const DEVICE_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
 
 interface BluetoothLowEnergyApi {
+  justReceive(): void;
   requestPermissions(): Promise<boolean>;
   scanForPeripherals(): void;
   connectToDevice: (deviceId: Device) => Promise<void>;
   disconnectFromDevice: () => void;
   connectedDevice: Device | null;
-  allDevices: Device[];
+  allDevices: Device[] | BluetoothDevice[];
   sendMessage(Device: Device, message: string): Promise<void>;
 }
 
 function useBLE(): BluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
-  const [allDevices, setAllDevices] = useState<Device[]>([]);
+  const [allDevices, setAllDevices] = useState<Device[] | BluetoothDevice[]>(
+    []
+  );
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
 
   // Android 11+ requires additional permissions
@@ -88,26 +104,31 @@ function useBLE(): BluetoothLowEnergyApi {
     }
   };
 
+  const justReceive = async () => {
+    const btAdaptor = RNBluetoothClassic;
+
+    try {
+      const discoverableIntent = await btAdaptor.accept({});
+      console.log("discoverableIntent", discoverableIntent);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   // Check if device is already in the list
   const isDuplicteDevice = (devices: Device[], nextDevice: Device) =>
     devices.findIndex((device) => nextDevice.id === device.id) > -1;
 
   // Scan for peripherals
-  const scanForPeripherals = () => {
-    bleManager.startDeviceScan(null, null, (error, device) => {
-      if (error) {
-        console.log(error);
-        return error;
-      }
-      if (device) {
-        setAllDevices((prevState: Device[]) => {
-          if (!isDuplicteDevice(prevState, device) && device.name) {
-            return [...prevState, device];
-          }
-          return prevState;
-        });
-      }
-    });
+  const scanForPeripherals = async () => {
+    const btAdaptor = RNBluetoothClassic;
+    const waitForScan = async () => {
+      return await btAdaptor.startDiscovery();
+    };
+
+    const devices = await waitForScan();
+
+    setAllDevices([...devices]);
   };
 
   // Connect to a device
@@ -181,6 +202,7 @@ function useBLE(): BluetoothLowEnergyApi {
 
   // Return the API
   return {
+    justReceive,
     scanForPeripherals,
     requestPermissions,
     connectToDevice,
